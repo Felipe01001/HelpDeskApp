@@ -11,7 +11,7 @@ pipeline {
         }
         stage('Executar Container Backend') {
             steps {
-                sh 'docker run -d --rm --name agendamento-app -p 8080:80 agendamento-app'
+                sh 'docker run -d --rm --name agendamento-app -p 8082:80 agendamento-app'
             }
         }
     }
