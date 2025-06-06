@@ -1,51 +1,164 @@
+**Documentação do Projeto - Execução do Pipeline CI/CD com Docker e Jenkins**
 
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### ✨ Objetivo
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Executar um pipeline automatizado com o Jenkins para construir e rodar um container Docker com uma aplicação backend Python, e enviar notificações por e-mail.
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 📁 Estrutura do Projeto
+
+```
+HelpDeskApp/
+├── backend/
+│   ├── app.py
+│   ├── Dockerfile
+│   └── requirements.txt
+└── Jenkinsfile
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🚀 Etapas do Setup (Windows e Linux)
 
-**Use GitHub Codespaces**
+### 1. **Instalar o Docker**
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+* **Windows**: Instale o [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+* **Linux (Debian/Ubuntu)**:
 
-## What technologies are used for this project?
+  ```bash
+  sudo apt update
+  sudo apt install -y docker.io
+  sudo systemctl enable docker
+  sudo systemctl start docker
+  ```
 
-This project is built with:
+### 2. **Instalar o Jenkins**
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+#### Via Docker (Recomendado para ambos):
 
-## How can I deploy this project?
+```bash
+# Executar Jenkins com acesso ao Docker host
+docker run -d \
+  --name jenkins \
+  -p 8081:8080 -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -u root \
+  jenkins/jenkins:lts
+```
 
-Simply open [Lovable](https://lovable.dev/projects/29ef7fda-5959-47ea-9d32-925c62103880) and click on Share -> Publish.
+### 3. **Obter Senha Inicial do Jenkins**
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+# Pegue a senha inicial
+sudo docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```
 
-Yes, you can!
+Acesse: `http://localhost:8081`
+Cole a senha para acessar a interface web.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## ⚖️ Configuração do Projeto no Jenkins
+
+### 1. **Criar Novo Job**
+
+* Tipo: *Pipeline*
+* Nome: `HelpDeskApp`
+
+### 2. **Configuração do SCM**
+
+* **Pipeline script from SCM**
+* SCM: Git
+* URL: `https://github.com/Felipe01001/HelpDeskApp.git`
+* Branch: `*/main`
+* Script Path: `Jenkinsfile`
+
+---
+
+## 📃 Jenkinsfile de Exemplo
+
+```groovy
+pipeline {
+    agent any
+
+    stages {
+        stage('Build Backend Docker') {
+            steps {
+                dir('backend') {
+                    sh 'docker build -t agendamento-app .'
+                }
+            }
+        }
+        stage('Executar Container Backend') {
+            steps {
+                sh 'docker run --rm agendamento-app'
+            }
+        }
+    }
+}
+```
+
+---
+
+## 🔧 Dockerfile do Backend
+
+```Dockerfile
+FROM python:3.10-slim
+
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+CMD ["python", "app.py"]
+```
+
+---
+
+## 📧 Configuração de Envio de E-mail (Mailtrap ou SMTP)
+
+Configure no código `app.py` ou no Jenkins plugin *Email Extension*. Exemplo com Mailtrap:
+
+```python
+import smtplib
+from email.mime.text import MIMEText
+
+msg = MIMEText("Seu agendamento foi processado com sucesso!")
+msg['Subject'] = "Confirmação"
+msg['From'] = "from@example.com"
+msg['To'] = "to@example.com"
+
+s = smtplib.SMTP("smtp.mailtrap.io", 2525)
+s.login("usuario", "senha")
+s.send_message(msg)
+s.quit()
+```
+
+---
+
+## 📊 Evidências para Entrega
+
+### 1. **Print do Jenkins executando pipeline**
+
+* Menu > Build History > última execução > Console Output
+
+### 2. **Print do repositório GitHub com estrutura**
+
+* Mostrar `Jenkinsfile`, pasta `backend/`, etc.
+
+### 3. **Print do e-mail ou log de envio no console**
+
+---
+
+## 📄 Observações Finais
+
+* Verifique se a porta usada pelo container está livre (use `docker ps`).
+* O Jenkins precisa ter permissão para acessar o Docker host (volume `/var/run/docker.sock`).
+
+---
+
+📅 Projeto testado com sucesso em: **06/06/2025**
+Responsável: *Felipe Santos de Almeida*
+Faculdade: *ESBAM* | Disciplina: *DevOps com Docker e Jenkins*
