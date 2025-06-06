@@ -1,16 +1,4 @@
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-
-EXPOSE 5000
-
-CMD ["npm", "start"]
-
+# backend/Dockerfile
 FROM python:3.10-slim
 
 WORKDIR /app
@@ -18,5 +6,7 @@ WORKDIR /app
 COPY . .
 
 RUN pip install -r requirements.txt
+
+EXPOSE 5000
 
 CMD ["python", "app.py"]
