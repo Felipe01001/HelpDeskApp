@@ -2,15 +2,16 @@ pipeline {
     agent any
 
     stages {
-        stage('Build e Executar Backend') {
+        stage('Build Backend Docker') {
             steps {
-                script {
-                    // Entra na pasta onde está o Dockerfile (ex: backend/)
-                    dir('backend') {
-                        def imagem = docker.build('agendamento-app')
-                        imagem.run()
-                    }
+                dir('backend') {
+                    sh 'docker build -t agendamento-app .'
                 }
+            }
+        }
+        stage('Executar Container Backend') {
+            steps {
+                sh 'docker run -d --rm --name agendamento-app -p 8080:80 agendamento-app'
             }
         }
     }
