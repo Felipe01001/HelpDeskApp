@@ -1,12 +1,12 @@
 pipeline {
     agent any
 
-    stage('Clonar projeto') {
-    steps {
-        git branch: 'main', url: 'https://github.com/Felipe01001/HelpDeskApp.git'
-    }
-}
-
+    stages {
+        stage('Clonar projeto') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Felipe01001/HelpDeskApp.git'
+            }
+        }
 
         stage('Build Backend Docker') {
             steps {
